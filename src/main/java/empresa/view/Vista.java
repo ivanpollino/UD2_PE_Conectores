@@ -10,7 +10,6 @@ public class Vista {
     public int mainMenu(){
         int opcion = -1;
         boolean entradaValida = false;
-        LocalDate date = LocalDate.now();
 
         while (!entradaValida) {
             try {
