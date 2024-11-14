@@ -20,15 +20,6 @@ public class DAOPostgreSQL implements IDAOEmpresa {
         return DriverManager.getConnection(url, user, password);
     }
 
-    public static void main(String[] args) throws SQLException {
-        DAOPostgreSQL dao = new DAOPostgreSQL();
-        Connection c;
-        c = dao.getConnection();
-
-        if (c != null) {
-            System.out.println("Conexion correcta");
-        }
-    }
 
     // Gestión de Videojuegos
     @Override
