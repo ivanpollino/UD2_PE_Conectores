@@ -10,14 +10,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class DAOMySQL implements IDAOEmpresa {
-    private String url = "jdbc:mysql://your-mysql-host/UD2_PE_Conectores";
-    private String user = "yourUsername"; // Cambia esto por tu usuario
-    private String password = "yourPassword"; // Cambia esto por tu contraseña
+    private String url = "jdbc:mysql://sql.freedb.tech:3306/freedb_UD2_PE_Conectores";
+    private String user = "freedb_ivanpollino";
+    private String password = "up%wBGWqS5mmMf3";
 
     // Método para obtener la conexión a MySQL
-    private Connection getConnection() throws SQLException {
+    public Connection getConnection() throws SQLException {
         return DriverManager.getConnection(url, user, password);
     }
+
 
     // Gestión de Videojuegos
     @Override
@@ -151,6 +152,7 @@ public class DAOMySQL implements IDAOEmpresa {
             while (rs.next()) {
                 players.add(new Player(
                         rs.getInt("player_id"),
+                        rs.getString("nickname"),
                         rs.getInt("experience"),
                         rs.getInt("life_level"),
                         rs.getInt("coins"),
@@ -175,6 +177,7 @@ public class DAOMySQL implements IDAOEmpresa {
             while (rs.next()) {
                 players.add(new Player(
                         rs.getInt("player_id"),
+                        rs.getString("nickname"),
                         rs.getInt("experience"),
                         rs.getInt("life_level"),
                         rs.getInt("coins"),

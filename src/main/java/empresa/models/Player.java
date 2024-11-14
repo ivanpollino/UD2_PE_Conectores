@@ -4,6 +4,7 @@ import java.time.LocalDate;
 
 public class Player {
     private int playerId;
+    private String nickname;
     private int experience;
     private int lifeLevel;
     private int coins;
@@ -11,8 +12,18 @@ public class Player {
     private LocalDate lastLogin;
 
     // Constructor
-    public Player(int playerId, int experience, int lifeLevel, int coins, int sessionCount, LocalDate lastLogin) {
+    public Player(String nickname, int experience, int lifeLevel, int coins, int sessionCount, LocalDate lastLogin) {
+        this.nickname = nickname;
+        this.experience = experience;
+        this.lifeLevel = lifeLevel;
+        this.coins = coins;
+        this.sessionCount = sessionCount;
+        this.lastLogin = lastLogin;
+    }
+
+    public Player(int playerId, String nickname, int experience, int lifeLevel, int coins, int sessionCount, LocalDate lastLogin) {
         this.playerId = playerId;
+        this.nickname = nickname;
         this.experience = experience;
         this.lifeLevel = lifeLevel;
         this.coins = coins;
@@ -38,4 +49,17 @@ public class Player {
 
     public LocalDate getLastLogin() { return lastLogin; }
     public void setLastLogin(LocalDate lastLogin) { this.lastLogin = lastLogin; }
+
+    @Override
+    public String toString() {
+        return "Jugador{" +
+                "playerId=" + playerId +
+                ", nickname='" + nickname + '\'' +
+                ", experience=" + experience +
+                ", lifeLevel=" + lifeLevel +
+                ", coins=" + coins +
+                ", sessionCount=" + sessionCount +
+                ", lastLogin=" + lastLogin +
+                '}';
+    }
 }

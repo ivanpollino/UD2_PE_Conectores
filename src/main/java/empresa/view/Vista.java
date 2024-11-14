@@ -122,8 +122,8 @@ public class Vista {
     }
 
     private static void insertarJugador() {
-        System.out.print("ID del jugador: ");
-        int playerId = scanner.nextInt();
+        System.out.print("Nickname: ");
+        String nickname = scanner.nextLine();
         System.out.print("Experiencia: ");
         int experience = scanner.nextInt();
         System.out.print("Nivel de vida: ");
@@ -137,7 +137,7 @@ public class Vista {
         String lastLoginStr = scanner.nextLine();
         LocalDate lastLogin = LocalDate.parse(lastLoginStr);
 
-        Player player = new Player(playerId, experience, lifeLevel, coins, sessionCount, lastLogin);
+        Player player = new Player(nickname, experience, lifeLevel, coins, sessionCount, lastLogin);
         if (daoPostgreSQL.savePlayerProgress(player)) {
             System.out.println("Jugador insertado correctamente.");
         } else {
@@ -152,7 +152,7 @@ public class Vista {
         if (!players.isEmpty()) {
             System.out.println("Top jugadores por experiencia:");
             for (Player player : players) {
-                System.out.println("ID: " + player.getPlayerId() + ", Experiencia: " + player.getExperience());
+                System.out.println("ID: " + player.getPlayerId() + "Nickname: " + ", Experiencia: " + player.getExperience());
             }
         } else {
             System.out.println("No se encontraron jugadores.");

@@ -4,6 +4,7 @@ import empresa.models.Game;
 import empresa.models.Player;
 import empresa.models.GameSession;
 
+import java.net.ConnectException;
 import java.sql.*;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -15,8 +16,18 @@ public class DAOPostgreSQL implements IDAOEmpresa {
     private String password = "IfK8XkDjiQ6Y";
 
     // Método para obtener la conexión
-    private Connection getConnection() throws SQLException {
+    public Connection getConnection() throws SQLException {
         return DriverManager.getConnection(url, user, password);
+    }
+
+    public static void main(String[] args) throws SQLException {
+        DAOPostgreSQL dao = new DAOPostgreSQL();
+        Connection c;
+        c = dao.getConnection();
+
+        if (c != null) {
+            System.out.println("Conexion correcta");
+        }
     }
 
     // Gestión de Videojuegos
@@ -174,6 +185,7 @@ public class DAOPostgreSQL implements IDAOEmpresa {
             while (rs.next()) {
                 players.add(new Player(
                         rs.getInt("player_id"),
+                        rs.getString("nickname"),
                         rs.getInt("experience"),
                         rs.getInt("life_level"),
                         rs.getInt("coins"),
@@ -200,6 +212,7 @@ public class DAOPostgreSQL implements IDAOEmpresa {
             while (rs.next()) {
                 Player player = new Player(
                         rs.getInt("player_id"),
+                        rs.getString("nickname"),
                         rs.getInt("experience"),
                         rs.getInt("life_level"),
                         rs.getInt("coins"),
