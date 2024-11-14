@@ -1,22 +1,27 @@
 package empresa.dao;
 
 import java.time.LocalDate;
+import java.util.List;
+import empresa.models.Game;
+import empresa.models.Player;
+import empresa.models.GameSession;
 
 public interface IDAOEmpresa {
-    //Gestion de videojuegos
-    public abstract String addGame();
-    public abstract String updateGame();
-    public abstract String getGameStats();
-    public abstract int getTotalPlayers();
-    public abstract int getTotalSessions();
-    public abstract LocalDate getLastSessionDate();
+    // Gestión de videojuegos
+    boolean insertGame(Game game);
+    boolean updateGame(Game game);
+    Game getGameStats(int gameId);
+    int getTotalPlayers(int gameId);
+    int getTotalSessions(int gameId);
+    LocalDate getLastSessionDate(int gameId);
 
-    //Gestion de jugadores
-    public abstract boolean savePlayerProgress();
-    public abstract boolean updatePlayerProgress();
-    public abstract String getTopExperiencePlayers();
-    public abstract String getTopLevelPlayers();
+    // Gestión de jugadores
+    boolean savePlayerProgress(Player player);
+    boolean updatePlayerProgress(Player player);
+    List<Player> getTopExperiencePlayers(int limit);
+    List<Player> getTopLevelPlayers(int limit);
 
-    //Gestion de partidas
-    public abstract boolean updateGameStats();
+    // Gestión de partidas
+    boolean saveGameSession(GameSession session);
+    List<GameSession> getPlayerSessions(int playerId);
 }

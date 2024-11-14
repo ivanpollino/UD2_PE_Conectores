@@ -9,12 +9,12 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
-public class DAOPostgreSQL implements IDAOEmpresa {
-    private String url = "jdbc:postgresql://ep-yellow-pine-a2a8zmg3.eu-central-1.aws.neon.tech:5432/UD2_PE_Conectores";
-    private String user = "UD2_PE_Conectores_owner";
-    private String password = "IfK8XkDjiQ6Y";
+public class DAOMySQL implements IDAOEmpresa {
+    private String url = "jdbc:mysql://your-mysql-host/UD2_PE_Conectores";
+    private String user = "yourUsername"; // Cambia esto por tu usuario
+    private String password = "yourPassword"; // Cambia esto por tu contraseña
 
-    // Método para obtener la conexión
+    // Método para obtener la conexión a MySQL
     private Connection getConnection() throws SQLException {
         return DriverManager.getConnection(url, user, password);
     }
@@ -22,16 +22,16 @@ public class DAOPostgreSQL implements IDAOEmpresa {
     // Gestión de Videojuegos
     @Override
     public boolean insertGame(Game game) {
-        String query = "INSERT INTO games (isbn, title, player_count, total_sessions, last_session) VALUES (?, ?, ?, ?, ?)";
+        String query = "INSERT INTO games (game_id, isbn, title, player_count, total_sessions, last_session) VALUES (?, ?, ?, ?, ?, ?)";
         try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(query)) {
-            stmt.setString(1, game.getIsbn());
-            stmt.setString(2, game.getTitle());
-            stmt.setInt(3, game.getPlayerCount());
-            stmt.setInt(4, game.getTotalSessions());
-            stmt.setDate(5, Date.valueOf(game.getLastSession()));
-
-            return stmt.executeUpdate() > 0;  // Devuelve true si se insertó correctamente
+            stmt.setInt(1, game.getGameId());
+            stmt.setString(2, game.getIsbn());
+            stmt.setString(3, game.getTitle());
+            stmt.setInt(4, game.getPlayerCount());
+            stmt.setInt(5, game.getTotalSessions());
+            stmt.setDate(6, Date.valueOf(game.getLastSession()));
+            return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -40,18 +40,6 @@ public class DAOPostgreSQL implements IDAOEmpresa {
 
     @Override
     public boolean updateGame(Game game) {
-        String query = "UPDATE games SET title = ?, player_count = ?, total_sessions = ?, last_session = ? WHERE game_id = ?";
-        try (Connection conn = getConnection();
-             PreparedStatement stmt = conn.prepareStatement(query)) {
-            stmt.setString(1, game.getTitle());
-            stmt.setInt(2, game.getPlayerCount());
-            stmt.setInt(3, game.getTotalSessions());
-            stmt.setDate(4, Date.valueOf(game.getLastSession()));
-            stmt.setInt(5, game.getGameId());
-            return stmt.executeUpdate() > 0;
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
         return false;
     }
 
@@ -80,51 +68,53 @@ public class DAOPostgreSQL implements IDAOEmpresa {
 
     @Override
     public int getTotalPlayers(int gameId) {
-        String query = "SELECT player_count FROM games WHERE game_id = ?";
+        String query = "SELECT COUNT(*) FROM players WHERE game_id = ?";
         try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setInt(1, gameId);
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
-                return rs.getInt("player_count");
+                return rs.getInt(1);  // Devuelve el número total de jugadores
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return 0;
+        return 0;  // Retorna 0 en caso de error
     }
 
     @Override
     public int getTotalSessions(int gameId) {
-        String query = "SELECT total_sessions FROM games WHERE game_id = ?";
+        String query = "SELECT COUNT(*) FROM game_sessions WHERE game_id = ?";
         try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setInt(1, gameId);
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
-                return rs.getInt("total_sessions");
+                return rs.getInt(1);  // Devuelve el número total de sesiones
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return 0;
+        return 0;  // Retorna 0 en caso de error
     }
 
     @Override
     public LocalDate getLastSessionDate(int gameId) {
-        String query = "SELECT last_session FROM games WHERE game_id = ?";
+        String query = "SELECT MAX(session_date) FROM game_sessions WHERE game_id = ?";
         try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setInt(1, gameId);
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
-                return rs.getDate("last_session").toLocalDate();
+                Date lastSession = rs.getDate(1);  // Obtiene la última fecha de sesión
+                return lastSession != null ? lastSession.toLocalDate() : null;  // Retorna la fecha, o null si no hay sesiones
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return null;
+        return null;  // Retorna null si no hay sesiones
     }
+
 
     // Gestión de Jugadores
     @Override
@@ -147,19 +137,6 @@ public class DAOPostgreSQL implements IDAOEmpresa {
 
     @Override
     public boolean updatePlayerProgress(Player player) {
-        String query = "UPDATE players SET experience = ?, life_level = ?, coins = ?, session_count = ?, last_login = ? WHERE player_id = ?";
-        try (Connection conn = getConnection();
-             PreparedStatement stmt = conn.prepareStatement(query)) {
-            stmt.setInt(1, player.getExperience());
-            stmt.setInt(2, player.getLifeLevel());
-            stmt.setInt(3, player.getCoins());
-            stmt.setInt(4, player.getSessionCount());
-            stmt.setDate(5, Date.valueOf(player.getLastLogin()));
-            stmt.setInt(6, player.getPlayerId());
-            return stmt.executeUpdate() > 0;
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
         return false;
     }
 
@@ -190,23 +167,20 @@ public class DAOPostgreSQL implements IDAOEmpresa {
     @Override
     public List<Player> getTopLevelPlayers(int limit) {
         List<Player> players = new ArrayList<>();
-        String query = "SELECT * FROM players ORDER BY life_level DESC LIMIT ?";
-
+        String query = "SELECT * FROM players ORDER BY experience DESC, life_level DESC LIMIT ?";
         try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(query)) {
-            stmt.setInt(1, limit);  // Establecer el límite de jugadores
+            stmt.setInt(1, limit);
             ResultSet rs = stmt.executeQuery();
-
             while (rs.next()) {
-                Player player = new Player(
+                players.add(new Player(
                         rs.getInt("player_id"),
                         rs.getInt("experience"),
                         rs.getInt("life_level"),
                         rs.getInt("coins"),
                         rs.getInt("session_count"),
                         rs.getDate("last_login").toLocalDate()
-                );
-                players.add(player);
+                ));
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -214,11 +188,10 @@ public class DAOPostgreSQL implements IDAOEmpresa {
         return players;
     }
 
-
+    // Gestión de Partidas
     @Override
     public boolean saveGameSession(GameSession session) {
         String query = "INSERT INTO game_sessions (game_id, player_id, experience, life_level, coins, session_date) VALUES (?, ?, ?, ?, ?, ?)";
-
         try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setInt(1, session.getGameId());
@@ -226,42 +199,35 @@ public class DAOPostgreSQL implements IDAOEmpresa {
             stmt.setInt(3, session.getExperience());
             stmt.setInt(4, session.getLifeLevel());
             stmt.setInt(5, session.getCoins());
-            stmt.setDate(6, Date.valueOf(session.getSessionDate()));  // Convertir LocalDate a java.sql.Date
-
-            int rowsAffected = stmt.executeUpdate();
-            return rowsAffected > 0;  // Retorna true si la inserción fue exitosa
+            stmt.setDate(6, Date.valueOf(session.getSessionDate()));
+            return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return false;  // Retorna false si hubo algún error
+        return false;
     }
-
 
     @Override
     public List<GameSession> getPlayerSessions(int playerId) {
         List<GameSession> sessions = new ArrayList<>();
         String query = "SELECT * FROM game_sessions WHERE player_id = ? ORDER BY session_date DESC";
-
         try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(query)) {
-            stmt.setInt(1, playerId);  // Establecer el ID del jugador en la consulta
+            stmt.setInt(1, playerId);
             ResultSet rs = stmt.executeQuery();
-
             while (rs.next()) {
-                GameSession session = new GameSession(
+                sessions.add(new GameSession(
                         rs.getInt("game_id"),
                         rs.getInt("player_id"),
                         rs.getInt("experience"),
                         rs.getInt("life_level"),
                         rs.getInt("coins"),
-                        rs.getDate("session_date").toLocalDate()  // Convertir java.sql.Date a LocalDate
-                );
-                sessions.add(session);
+                        rs.getDate("session_date").toLocalDate()
+                ));
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
         return sessions;
     }
-
 }
