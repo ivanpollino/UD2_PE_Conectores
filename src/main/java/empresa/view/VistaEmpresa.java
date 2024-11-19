@@ -1,4 +1,4 @@
-package empresa.vista;
+package empresa.view;
 
 import empresa.dao.DAOPostgreSQL;
 import empresa.models.Game;
@@ -9,54 +9,74 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Scanner;
 
-public class Vista {
+public class VistaEmpresa {
 
     private static DAOPostgreSQL daoPostgreSQL = new DAOPostgreSQL();
     private static Scanner scanner = new Scanner(System.in);
 
     public static void main(String[] args) {
-        while (true) {
-            System.out.println("1. Insertar Juego");
-            System.out.println("2. Actualizar Juego");
-            System.out.println("3. Ver Estadísticas de Juego");
-            System.out.println("4. Insertar Jugador");
-            System.out.println("5. Ver Jugadores Top por Experiencia");
-            System.out.println("6. Insertar Sesión de Juego");
-            System.out.println("7. Ver Sesiones de Jugador");
-            System.out.println("8. Salir");
-            System.out.print("Elige una opción: ");
-            int opcion = scanner.nextInt();
-            scanner.nextLine();  // Limpiar el buffer
+       mainMenu();
 
+    }
+    private static void mainMenu(){
+        int opcion;
+        do {
+            System.out.println("=====Menu Principal=====");
+            System.out.println("1.Gestionar Juegos");
+            System.out.println("2.Gestionar Jugadores");
+            System.out.println("3.Gestionar Sesiones");
+            System.out.println("4.Salir");
+            System.out.print("Opcion: ");
+            opcion = scanner.nextInt();
+            scanner.nextLine();
+            switch (opcion) {
+                case 1:
+                    subMenuJuego();
+                case 2:
+                    subMenuJugador();
+
+            }
+        }while (opcion < 1 || opcion > 4);
+    }
+
+    private static void subMenuJuego(){
+        int opcion;
+        do{
+            System.out.println("=====Gestionar Juego=====");
+            System.out.println("1.Insertar juego");
+            System.out.println("2.Actualizar juego");
+            System.out.println("3.Ver estadisticas juego");
+            System.out.println("4.Salir");
+            System.out.print("Opcion: ");
+            opcion = scanner.nextInt();
+            scanner.nextLine();
             switch (opcion) {
                 case 1:
                     insertarJuego();
-                    break;
                 case 2:
                     actualizarJuego();
-                    break;
                 case 3:
                     verEstadisticasJuego();
-                    break;
-                case 4:
-                    insertarJugador();
-                    break;
-                case 5:
-                    verTopJugadores();
-                    break;
-                case 6:
-                    insertarSesionJuego();
-                    break;
-                case 7:
-                    verSesionesJugador();
-                    break;
-                case 8:
-                    System.out.println("Saliendo...");
-                    return;
-                default:
-                    System.out.println("Opción inválida.");
             }
-        }
+        }while (opcion < 1 || opcion > 4);
+    }
+
+    private static void subMenuJugador(){
+        int opcion;
+        do{
+            System.out.println("=====Gestionar Jugadores=====");
+            System.out.println("1.Insertar jugador");
+            System.out.println("2.Ver top jugadores");
+            System.out.println("3.Salir");
+            opcion = scanner.nextInt();
+            scanner.nextLine();
+            switch (opcion) {
+                case 1:
+                    insertarJugador();
+                case 2:
+                    verTopJugadores();
+            }
+        }while (opcion < 1 || opcion > 3);
     }
 
     private static void insertarJuego() {
@@ -64,14 +84,10 @@ public class Vista {
         String isbn = scanner.nextLine();
         System.out.print("Título del juego: ");
         String title = scanner.nextLine();
-        System.out.print("Número de jugadores: ");
-        int playerCount = scanner.nextInt();
-        System.out.print("Número de sesiones: ");
-        int totalSessions = scanner.nextInt();
-        scanner.nextLine();  // Limpiar el buffer
-        System.out.print("Fecha de última sesión (yyyy-mm-dd): ");
-        String lastSessionStr = scanner.nextLine();
-        LocalDate lastSession = LocalDate.parse(lastSessionStr);
+        int playerCount = 0;
+        int totalSessions = 0;
+        scanner.nextLine();
+        LocalDate lastSession = LocalDate.now();
 
         // El gameId no es necesario porque se generará automáticamente en la base de datos
         Game game = new Game(isbn, title, playerCount, totalSessions, lastSession);
