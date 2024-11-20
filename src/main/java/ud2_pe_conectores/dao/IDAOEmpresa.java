@@ -1,10 +1,10 @@
-package empresa.dao;
+package ud2_pe_conectores.dao;
 
 import java.time.LocalDate;
 import java.util.List;
-import empresa.models.Game;
-import empresa.models.Player;
-import empresa.models.GameSession;
+import ud2_pe_conectores.models.Game;
+import ud2_pe_conectores.models.Player;
+import ud2_pe_conectores.models.GameSession;
 
 public interface IDAOEmpresa {
     // Gestión de videojuegos

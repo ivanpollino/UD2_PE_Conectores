@@ -1,10 +1,9 @@
-package empresa.view;
+package ud2_pe_conectores.view;
 
-import empresa.dao.DAOFactory;
-import empresa.dao.IDAOEmpresa;
-import empresa.models.Game;
-import empresa.models.Player;
-import empresa.models.GameSession;
+import ud2_pe_conectores.dao.DAOFactory;
+import ud2_pe_conectores.dao.IDAOEmpresa;
+import ud2_pe_conectores.models.Game;
+import ud2_pe_conectores.models.Player;
 
 import java.time.LocalDate;
 import java.util.List;

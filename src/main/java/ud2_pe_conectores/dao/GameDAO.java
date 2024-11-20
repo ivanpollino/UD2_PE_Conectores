@@ -1,6 +1,6 @@
-package empresa.dao;
+package ud2_pe_conectores.dao;
 
-import empresa.models.Game;
+import ud2_pe_conectores.models.Game;
 
 import java.sql.*;
 import java.util.*;

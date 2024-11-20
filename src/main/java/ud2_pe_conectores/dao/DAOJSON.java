@@ -1,7 +1,7 @@
-package empresa.dao;
+package ud2_pe_conectores.dao;
 
 import com.google.gson.Gson;
-import empresa.models.ConnectionConfig;
+import ud2_pe_conectores.models.ConnectionConfig;
 
 import java.io.FileReader;
 import java.io.FileWriter;

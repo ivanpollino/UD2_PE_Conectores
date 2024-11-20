@@ -1,19 +1,16 @@
-package empresa.view;
+package ud2_pe_conectores.view;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
-import empresa.dao.*;
-import empresa.models.ConnectionConfig;
-import empresa.models.Game;
-import empresa.models.Player;
-import empresa.models.PlayerState;
+import ud2_pe_conectores.dao.*;
+import ud2_pe_conectores.models.ConnectionConfig;
+import ud2_pe_conectores.models.Game;
+import ud2_pe_conectores.models.Player;
+import ud2_pe_conectores.models.PlayerState;
 
 import static java.sql.DriverManager.getConnection;
 

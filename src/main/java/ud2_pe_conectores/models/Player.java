@@ -1,4 +1,4 @@
-package empresa.models;
+package ud2_pe_conectores.models;
 
 import java.time.LocalDate;
 

@@ -1,6 +1,6 @@
-package empresa.dao;
+package ud2_pe_conectores.dao;
 import com.google.gson.Gson;
-import empresa.models.*;
+import ud2_pe_conectores.models.*;
 
 import java.sql.*;
 import java.util.ArrayList;
