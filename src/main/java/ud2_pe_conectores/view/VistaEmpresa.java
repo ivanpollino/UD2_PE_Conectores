@@ -1,6 +1,8 @@
 package ud2_pe_conectores.view;
 
 import ud2_pe_conectores.dao.DAOFactory;
+import ud2_pe_conectores.dao.DAOMySQL;
+import ud2_pe_conectores.dao.DAOPostgreSQL;
 import ud2_pe_conectores.dao.IDAOEmpresa;
 import ud2_pe_conectores.models.Game;
 import ud2_pe_conectores.models.Player;
@@ -13,6 +15,8 @@ public class VistaEmpresa {
 
     private static IDAOEmpresa dao;
     private static Scanner scanner = new Scanner(System.in);
+    private static DAOMySQL daoMySQL = new DAOMySQL();
+    private static DAOPostgreSQL daoPostgreSQL = new DAOPostgreSQL();
 
     public static void main(String[] args) {
         seleccionarBaseDeDatos();
@@ -204,7 +208,7 @@ public class VistaEmpresa {
         String nickname = scanner.nextLine();
 
         Player player = new Player(nickname, 0, 0, 0, 0, LocalDate.now());
-        if (dao.savePlayerProgress(player)) {
+        if (daoMySQL.savePlayerProgress(player) && daoPostgreSQL.savePlayerProgress(player)) {
             System.out.println("Jugador insertado correctamente.");
         } else {
             System.out.println("Error al insertar el jugador.");

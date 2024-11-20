@@ -275,6 +275,23 @@ public class DAOPostgreSQL implements IDAOEmpresa {
         return players;
     }
 
+    public boolean updatePlayerFromPlayerState(PlayerState playerState) {
+        String query = "UPDATE players SET nickname = ?, experience = ?, life_level = ?, coins = ? WHERE player_id = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setString(1, playerState.getNickName());
+            stmt.setInt(2, playerState.getExperience());
+            stmt.setInt(3, playerState.getLifeLevel());
+            stmt.setInt(4, playerState.getCoins());
+            stmt.setInt(5, playerState.getPlayerId());
+
+            return stmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
     public List<Player> getAllPlayers() {
         List<Player> players = new ArrayList<>();
         String query = "SELECT * FROM players";

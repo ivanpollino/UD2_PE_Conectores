@@ -10,6 +10,15 @@ public class PlayerState {
     private int coins;
     private int sessionCount;
     private LocalDate lastLogin;
+    private int gameID;
+
+    public int getGameID() {
+        return gameID;
+    }
+
+    public void setGameID(int gameID) {
+        this.gameID = gameID;
+    }
 
     public PlayerState() {
 
