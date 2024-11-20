@@ -35,6 +35,14 @@ public class Player {
     public int getPlayerId() { return playerId; }
     public void setPlayerId(int playerId) { this.playerId = playerId; }
 
+    public String getNickname() {
+        return nickname;
+    }
+
+    public void setNickname(String nickname) {
+        this.nickname = nickname;
+    }
+
     public int getExperience() { return experience; }
     public void setExperience(int experience) { this.experience = experience; }
 

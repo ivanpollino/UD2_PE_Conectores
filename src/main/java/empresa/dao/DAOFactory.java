@@ -1,4 +1,20 @@
 package empresa.dao;
-public abstract class DAOFactory {
 
+public class DAOFactory {
+
+    public enum DBType {
+        MYSQL,
+        POSTGRESQL
+    }
+
+    public static IDAOEmpresa getDAO(DBType dbType) {
+        switch (dbType) {
+            case MYSQL:
+                return new DAOMySQL();
+            case POSTGRESQL:
+                return new DAOPostgreSQL();
+            default:
+                throw new IllegalArgumentException("Tipo de base de datos no soportado.");
+        }
+    }
 }

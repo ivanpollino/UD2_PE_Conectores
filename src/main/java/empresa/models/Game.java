@@ -11,6 +11,8 @@ public class Game {
     private LocalDate lastSession;
 
     // Constructor
+    public Game() {
+    }
     public Game(String isbn, String title, int playerCount, int totalSessions, LocalDate lastSession) {
         this.isbn = isbn;
         this.title = title;

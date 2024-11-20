@@ -11,6 +11,20 @@ public class PlayerState {
     private int sessionCount;
     private LocalDate lastLogin;
 
+    public PlayerState() {
+
+    }
+
+    public PlayerState(int playerId, String nickName, int experience, int lifeLevel, int coins, int sessionCount, String date) {
+        this.playerId = playerId;
+        this.nickName = nickName;
+        this.experience = experience;
+        this.lifeLevel = lifeLevel;
+        this.coins = coins;
+        this.sessionCount = sessionCount;
+        this.lastLogin = LocalDate.parse(date);
+    }
+
     // Getters and Setters
     public int getPlayerId() {
         return playerId;
