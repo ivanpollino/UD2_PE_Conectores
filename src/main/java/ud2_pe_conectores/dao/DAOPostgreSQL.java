@@ -157,21 +157,6 @@ public class DAOPostgreSQL implements IDAOEmpresa {
         return false;
     }
 
-    public boolean playerExists(int playerId) {
-        String query = "SELECT COUNT(*) FROM players WHERE player_id = ?";
-        try (Connection conn = getConnection();
-             PreparedStatement stmt = conn.prepareStatement(query)) {
-            stmt.setInt(1, playerId);
-            ResultSet rs = stmt.executeQuery();
-            if (rs.next()) {
-                return rs.getInt(1) > 0;
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return false;
-    }
-
     /**
      * Obtiene el estado del jugador desde la base de datos MySQL.
      *
@@ -318,6 +303,7 @@ public class DAOPostgreSQL implements IDAOEmpresa {
     }
 
 
+
     @Override
     public boolean saveGameSession(int gameId, int playerId, int experience, int lifeLevel, int coins, LocalDate sessionDate) {
         String query = "INSERT INTO game_sessions (game_id, player_id, experience, life_level, coins, session_date) " +
@@ -333,12 +319,14 @@ public class DAOPostgreSQL implements IDAOEmpresa {
             statement.setInt(5, coins);
             statement.setDate(6, Date.valueOf(sessionDate));
 
-            return statement.executeUpdate() > 0; // Devuelve true si la inserción fue exitosa
+            return statement.executeUpdate() > 0;  // Devuelve true si la inserción fue exitosa
         } catch (SQLException e) {
             e.printStackTrace();
             return false;
         }
     }
+
+
 
 
     @Override
@@ -348,24 +336,41 @@ public class DAOPostgreSQL implements IDAOEmpresa {
 
         try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(query)) {
-            stmt.setInt(1, playerId);  // Establecer el ID del jugador en la consulta
+            stmt.setInt(1, playerId);
             ResultSet rs = stmt.executeQuery();
-
             while (rs.next()) {
-                GameSession session = new GameSession(
+                sessions.add(new GameSession(
                         rs.getInt("game_id"),
                         rs.getInt("player_id"),
                         rs.getInt("experience"),
                         rs.getInt("life_level"),
                         rs.getInt("coins"),
-                        rs.getDate("session_date").toLocalDate()  // Convertir java.sql.Date a LocalDate
-                );
-                sessions.add(session);
+                        rs.getDate("session_date").toLocalDate()
+                ));
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
         return sessions;
+    }
+
+
+    @Override
+    public boolean playerExists(int playerId) {
+        String query = "SELECT COUNT(*) AS count FROM Players WHERE player_id = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+
+            stmt.setInt(1, playerId); // Establece el ID del jugador
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                return rs.getInt("count") > 0; // Devuelve true si el conteo es mayor a 0
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false; // Devuelve false en caso de error o si no existe el jugador
     }
 
 }
