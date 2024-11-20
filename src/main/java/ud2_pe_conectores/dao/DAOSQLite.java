@@ -1,6 +1,6 @@
-package empresa.dao;
+package ud2_pe_conectores.dao;
 import com.google.gson.Gson;
-import empresa.models.*;
+import ud2_pe_conectores.models.*;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -9,19 +9,35 @@ import java.util.Map;
 
 public class DAOSQLite {
 
-    private static final String DB_URL = "jdbc:sqlite:player_data.db"; // Ruta de la base de datos SQLite
-    private Gson gson = new Gson();  // Instanciamos Gson para convertir a y desde JSON
+    // Ruta de la base de datos SQLite
+    private static final String DB_URL = "jdbc:sqlite:UD2_PE_Conectores.db";
+
+    private Gson gson = new Gson();
 
     // Obtener la conexión a la base de datos
     private Connection getConnection() throws SQLException {
         return DriverManager.getConnection(DB_URL);
     }
 
+    // Guardar configuración del jugador
+    public boolean saveLocalConfig(boolean soundEnabled, String resolution, String language) {
+        String query = "INSERT INTO PlayerConfig (sound_enabled, resolution, language) VALUES (?, ?, ?)";
+        try (Connection conn = getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setBoolean(1, soundEnabled);
+            stmt.setString(2, resolution);
+            stmt.setString(3, language);
+            return stmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
 
 
     // Guardar configuración del jugador
     public boolean savePlayerConfig(Map<String, String> controlSettings, boolean soundEnabled, String resolution, String language) {
-        String query = "INSERT INTO player_config (control_settings, sound_enabled, resolution, language) VALUES (?, ?, ?, ?)";
+        String query = "INSERT INTO PlayerConfig (control_settings, sound_enabled, resolution, language) VALUES (?, ?, ?, ?)";
         try (Connection conn = getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
             String controlSettingsJson = gson.toJson(controlSettings); // Convertir el mapa en JSON
             stmt.setString(1, controlSettingsJson);  // Guardamos como String
@@ -37,7 +53,7 @@ public class DAOSQLite {
 
     // Actualizar configuración del jugador
     public boolean updatePlayerConfig(int playerId, Map<String, String> controlSettings, boolean soundEnabled, String resolution, String language) {
-        String query = "UPDATE player_config SET control_settings = ?, sound_enabled = ?, resolution = ?, language = ? WHERE player_id = ?";
+        String query = "UPDATE PlayerConfig SET control_settings = ?, sound_enabled = ?, resolution = ?, language = ? WHERE player_id = ?";
         try (Connection conn = getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
             String controlSettingsJson = gson.toJson(controlSettings); // Convertir el mapa en JSON
             stmt.setString(1, controlSettingsJson);
@@ -54,7 +70,7 @@ public class DAOSQLite {
 
     // Obtener configuración del jugador
     public PlayerConfig getPlayerConfig(int playerId) {
-        String query = "SELECT * FROM player_config WHERE player_id = ?";
+        String query = "SELECT * FROM PlayerConfig WHERE player_id = ?";
         try (Connection conn = getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setInt(1, playerId);
             ResultSet rs = stmt.executeQuery();
@@ -79,7 +95,7 @@ public class DAOSQLite {
 
     // Guardar estado del jugador
     public boolean savePlayerState(PlayerState playerState) {
-        String query = "INSERT INTO player_state (player_id, nick_name, experience, life_level, coins, session_count, last_login) VALUES (?, ?, ?, ?, ?, ?, ?)";
+        String query = "INSERT INTO PlayerState (player_id, nick_name, experience, life_level, coins, session_count, last_login) VALUES (?, ?, ?, ?, ?, ?, ?)";
         try (Connection conn = getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setInt(1, playerState.getPlayerId());
             stmt.setString(2, playerState.getNickName());
@@ -97,7 +113,7 @@ public class DAOSQLite {
 
     // Actualizar estado del jugador
     public boolean updatePlayerState(PlayerState playerState) {
-        String query = "UPDATE player_state SET nick_name = ?, experience = ?, life_level = ?, coins = ?, session_count = ?, last_login = ? WHERE player_id = ?";
+        String query = "UPDATE PlayerState SET nick_name = ?, experience = ?, life_level = ?, coins = ?, session_count = ?, last_login = ? WHERE player_id = ?";
         try (Connection conn = getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setString(1, playerState.getNickName());
             stmt.setInt(2, playerState.getExperience());
@@ -113,9 +129,47 @@ public class DAOSQLite {
         return false;
     }
 
+    public boolean saveOrUpdateLocalConfig(boolean soundEnabled, String resolution, String language) {
+        // Consulta para comprobar si ya existe alguna configuración
+        String queryCheckExistence = "SELECT COUNT(*) FROM PlayerConfig"; // Verifica si hay alguna fila en la tabla
+
+        // Consultas de actualización e inserción
+        String updateQuery = "UPDATE PlayerConfig SET sound_enabled = ?, resolution = ?, language = ? WHERE id = 3";
+        String insertQuery = "INSERT INTO PlayerConfig (sound_enabled, resolution, language) VALUES (?, ?, ?)";
+
+        try (Connection conn = getConnection();
+             PreparedStatement stmtCheck = conn.prepareStatement(queryCheckExistence)) {
+
+            // Verificamos si hay alguna fila en la tabla
+            ResultSet rs = stmtCheck.executeQuery();
+            if (rs.next() && rs.getInt(1) > 0) {
+                // Si ya existe una fila, actualizamos la configuración
+                try (PreparedStatement stmtUpdate = conn.prepareStatement(updateQuery)) {
+                    stmtUpdate.setBoolean(1, soundEnabled);
+                    stmtUpdate.setString(2, resolution);
+                    stmtUpdate.setString(3, language);
+                    return stmtUpdate.executeUpdate() > 0;
+                }
+            } else {
+                // Si no existe ninguna fila, insertamos una nueva configuración
+                try (PreparedStatement stmtInsert = conn.prepareStatement(insertQuery)) {
+                    stmtInsert.setBoolean(1, soundEnabled);
+                    stmtInsert.setString(2, resolution);
+                    stmtInsert.setString(3, language);
+                    return stmtInsert.executeUpdate() > 0;
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+
+
     // Obtener estado del jugador
     public PlayerState getPlayerState(int playerId) {
-        String query = "SELECT * FROM player_state WHERE player_id = ?";
+        String query = "SELECT * FROM PlayerState WHERE player_id = ?";
         try (Connection conn = getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setInt(1, playerId);
             ResultSet rs = stmt.executeQuery();

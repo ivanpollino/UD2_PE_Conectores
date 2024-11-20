@@ -1,4 +1,4 @@
-package empresa.models;
+package ud2_pe_conectores.models;
 
 import java.time.LocalDate;
 
@@ -10,6 +10,29 @@ public class PlayerState {
     private int coins;
     private int sessionCount;
     private LocalDate lastLogin;
+    private int gameID;
+
+    public int getGameID() {
+        return gameID;
+    }
+
+    public void setGameID(int gameID) {
+        this.gameID = gameID;
+    }
+
+    public PlayerState() {
+
+    }
+
+    public PlayerState(int playerId, String nickName, int experience, int lifeLevel, int coins, int sessionCount, String date) {
+        this.playerId = playerId;
+        this.nickName = nickName;
+        this.experience = experience;
+        this.lifeLevel = lifeLevel;
+        this.coins = coins;
+        this.sessionCount = sessionCount;
+        this.lastLogin = LocalDate.parse(date);
+    }
 
     // Getters and Setters
     public int getPlayerId() {
@@ -60,11 +83,28 @@ public class PlayerState {
         this.sessionCount = sessionCount;
     }
 
+    public void aumentarSesiones(){
+        this.sessionCount++;
+    }
+
     public LocalDate getLastLogin() {
         return lastLogin;
     }
 
     public void setLastLogin(LocalDate lastLogin) {
         this.lastLogin = lastLogin;
+    }
+
+    @Override
+    public String toString() {
+        return "PlayerState{" +
+                "playerId=" + playerId +
+                ", nickName='" + nickName + '\'' +
+                ", experience=" + experience +
+                ", lifeLevel=" + lifeLevel +
+                ", coins=" + coins +
+                ", sessionCount=" + sessionCount +
+                ", lastLogin=" + lastLogin +
+                '}';
     }
 }

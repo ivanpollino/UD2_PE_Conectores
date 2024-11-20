@@ -1,4 +1,4 @@
-package empresa.models;
+package ud2_pe_conectores.models;
 
 import java.time.LocalDate;
 
@@ -12,6 +12,9 @@ public class Player {
     private LocalDate lastLogin;
 
     // Constructor
+    public Player() {
+
+    }
     public Player(String nickname, int experience, int lifeLevel, int coins, int sessionCount, LocalDate lastLogin) {
         this.nickname = nickname;
         this.experience = experience;
@@ -34,6 +37,14 @@ public class Player {
     // Getters y Setters
     public int getPlayerId() { return playerId; }
     public void setPlayerId(int playerId) { this.playerId = playerId; }
+
+    public String getNickname() {
+        return nickname;
+    }
+
+    public void setNickname(String nickname) {
+        this.nickname = nickname;
+    }
 
     public int getExperience() { return experience; }
     public void setExperience(int experience) { this.experience = experience; }
