@@ -79,18 +79,29 @@ public class PlayerView {
             System.out.println("El estado del jugador ya existe en SQLite.");
         }
 
-        // **Actualizar la tabla Players en MySQL con los datos de PlayerState**
-        if (!daoMySQL.updatePlayerFromPlayerState(playerState) && !daoPostgreSQL.updatePlayerFromPlayerState(playerState)) {
-            System.out.println("Hubo un error al actualizar el jugador en la nube.");
+        // Actualizar el estado del jugador en MySQL
+        boolean updatedInMySQL = daoMySQL.updatePlayerFromPlayerState(playerState);
+        if (updatedInMySQL) {
+            System.out.println("Estado del jugador actualizado en MySQL.");
         } else {
-            System.out.println("El jugador se actualizo en la nube.");
+            System.out.println("Hubo un error al actualizar el estado del jugador en MySQL.");
         }
+
+        // Actualizar el estado del jugador en PostgreSQL
+        boolean updatedInPostgreSQL = daoPostgreSQL.updatePlayerFromPlayerState(playerState);
+        if (updatedInPostgreSQL) {
+            System.out.println("Estado del jugador actualizado en PostgreSQL.");
+        } else {
+            System.out.println("Hubo un error al actualizar el estado del jugador en PostgreSQL.");
+        }
+
         System.out.println("===== ESTADO DEL JUGADOR " + loggedInPlayer.getNickname() + " =====");
         playerState = daoSQLite.getPlayerState(loggedInPlayer.getPlayerId());
         System.out.println(playerState);
 
         return loggedInPlayer; // Retornamos el jugador que hizo login
     }
+
 
 
 

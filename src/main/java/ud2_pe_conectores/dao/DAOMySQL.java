@@ -307,7 +307,7 @@ public class DAOMySQL implements IDAOEmpresa {
             statement.setInt(5, coins);
             statement.setDate(6, Date.valueOf(sessionDate));
 
-            return statement.executeUpdate() > 0; // Devuelve true si la inserción fue exitosa
+            return statement.executeUpdate() > 0;  // Devuelve true si la inserción fue exitosa
         } catch (SQLException e) {
             e.printStackTrace();
             return false;
@@ -316,10 +316,12 @@ public class DAOMySQL implements IDAOEmpresa {
 
 
 
+
     @Override
     public List<GameSession> getPlayerSessions(int playerId) {
         List<GameSession> sessions = new ArrayList<>();
         String query = "SELECT * FROM game_sessions WHERE player_id = ? ORDER BY session_date DESC";
+
         try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setInt(1, playerId);
@@ -339,4 +341,8 @@ public class DAOMySQL implements IDAOEmpresa {
         }
         return sessions;
     }
+
+
+
+
 }

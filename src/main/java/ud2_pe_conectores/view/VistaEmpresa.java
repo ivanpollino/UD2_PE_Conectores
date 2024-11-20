@@ -5,8 +5,10 @@ import ud2_pe_conectores.dao.DAOMySQL;
 import ud2_pe_conectores.dao.DAOPostgreSQL;
 import ud2_pe_conectores.dao.IDAOEmpresa;
 import ud2_pe_conectores.models.Game;
+import ud2_pe_conectores.models.GameSession;
 import ud2_pe_conectores.models.Player;
 
+import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Scanner;
@@ -18,7 +20,7 @@ public class VistaEmpresa {
     private static DAOMySQL daoMySQL = new DAOMySQL();
     private static DAOPostgreSQL daoPostgreSQL = new DAOPostgreSQL();
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws SQLException {
         seleccionarBaseDeDatos();
         mainMenu();
     }
@@ -45,7 +47,7 @@ public class VistaEmpresa {
         System.out.println("Conectado a la base de datos seleccionada.\n");
     }
 
-    private static void mainMenu() {
+    private static void mainMenu() throws SQLException {
         int opcion;
         do {
             System.out.println("===== Menú Principal =====");
@@ -134,7 +136,7 @@ public class VistaEmpresa {
         } while (opcion != 3);
     }
 
-    private static void subMenuSesiones() {
+    private static void subMenuSesiones() throws SQLException {
         int opcion;
         do {
             System.out.println("===== Gestionar Sesiones =====");
@@ -226,11 +228,75 @@ public class VistaEmpresa {
         }
     }
 
-    private static void insertarSesionJuego() {
-        // Método similar al de insertarJugador()
+    private static void insertarSesionJuego() throws SQLException {
+        System.out.println("Insertar nueva sesión de juego:");
+
+        // Solicitar ID del juego
+        System.out.print("Ingrese el ID del juego: ");
+        int gameId = scanner.nextInt();
+
+        // Solicitar ID del jugador
+        System.out.print("Ingrese el ID del jugador: ");
+        int playerId = scanner.nextInt();
+
+        // Verificar si el jugador existe
+        if (!dao.playerExists(playerId)) {
+            System.out.println("Error: El jugador con ID " + playerId + " no existe.");
+            return;
+        }
+
+        // Solicitar experiencia ganada
+        System.out.print("Ingrese la experiencia ganada: ");
+        int experience = scanner.nextInt();
+
+        // Solicitar cambio en nivel de vida
+        System.out.print("Ingrese el cambio en el nivel de vida (+/-): ");
+        int lifeLevel = scanner.nextInt();
+
+        // Solicitar cambio en monedas
+        System.out.print("Ingrese el cambio en monedas (+/-): ");
+        int coins = scanner.nextInt();
+
+        // Registrar la fecha de la sesión
+        LocalDate sessionDate = LocalDate.now();
+
+        // Guardar la sesión en la base de datos
+        boolean success = dao.saveGameSession(gameId, playerId, experience, lifeLevel, coins, sessionDate);
+
+        if (success) {
+            System.out.println("La sesión de juego se registró exitosamente.");
+        } else {
+            System.out.println("Error al registrar la sesión de juego.");
+        }
     }
 
+
+
     private static void verSesionesJugador() {
-        // Método similar al de verTopJugadores()
+        System.out.println("Ver sesiones de un jugador:");
+
+        // Solicitar ID del jugador
+        System.out.print("Ingrese el ID del jugador: ");
+        int playerId = scanner.nextInt();
+
+        // Obtener las sesiones del jugador
+        List<GameSession> sessions = dao.getPlayerSessions(playerId);
+
+        if (sessions.isEmpty()) {
+            System.out.println("No se encontraron sesiones para el jugador con ID " + playerId + ".");
+            return;
+        }
+
+        // Mostrar las sesiones obtenidas
+        System.out.println("Sesiones del jugador con ID " + playerId + ":");
+        for (GameSession session : sessions) {
+            System.out.println("Fecha: " + session.getSessionDate());
+            System.out.println("ID del Juego: " + session.getGameId());
+            System.out.println("Experiencia ganada: " + session.getExperience());
+            System.out.println("Cambio en nivel de vida: " + session.getLifeLevel());
+            System.out.println("Cambio en monedas: " + session.getCoins());
+            System.out.println("---------------------------");
+        }
     }
+
 }
