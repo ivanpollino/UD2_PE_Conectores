@@ -4,15 +4,15 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
-import empresa.dao.DAOJSON;
-import empresa.dao.DAOSQLite;
-import empresa.dao.GameDAO;
+import empresa.dao.*;
 import empresa.models.ConnectionConfig;
 import empresa.models.Game;
+import empresa.models.Player;
 import empresa.models.PlayerState;
 
 import static java.sql.DriverManager.getConnection;
@@ -21,8 +21,12 @@ public class PlayerView {
 
     private static final Scanner scanner = new Scanner(System.in);
     private static final DAOJSON daoConfig = new DAOJSON();
+    private static final DAOMySQL daoMySQL = new DAOMySQL();
+    private static final DAOPostgreSQL daoPostgreSQL = new DAOPostgreSQL();
+    private static DAOSQLite daoSQLite = new DAOSQLite();
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws SQLException {
+        login();
         // Configuración inicial
         System.out.println("Bienvenido al Cliente del Jugador");
 
@@ -30,10 +34,75 @@ public class PlayerView {
         mainMenu();
     }
 
+    private static Player login() {
+        boolean loginExitoso = false; // Bandera para verificar si el login es exitoso
+        Player loggedInPlayer = null; // Aquí almacenamos al jugador que hace login
+
+        do {
+            System.out.println("\n---- Login ----");
+            System.out.print("Ingrese su nickname: ");
+            String nickname = scanner.nextLine();
+
+            // Intentar login en MySQL
+            List<Player> players = daoMySQL.getAllPlayers();
+            for (Player p : players) {
+                if (p.getNickname().equalsIgnoreCase(nickname)) {
+                    System.out.println("Login exitoso en MySQL");
+                    loggedInPlayer = p;  // Guardamos el jugador que hizo login
+                    loginExitoso = true; // El login fue exitoso, salir del bucle
+                    break; // Romper el bucle de MySQL
+                }
+            }
+
+            // Intentar login en PostgreSQL si el login no fue exitoso en MySQL
+            if (!loginExitoso) {
+                players = daoPostgreSQL.getAllPlayers();
+                for (Player p : players) {
+                    if (p.getNickname().equalsIgnoreCase(nickname)) {
+                        System.out.println("Login exitoso en PostgreSQL");
+                        loggedInPlayer = p;  // Guardamos el jugador que hizo login
+                        loginExitoso = true; // El login fue exitoso, salir del bucle
+                        break; // Romper el bucle de PostgreSQL
+                    }
+                }
+            }
+
+            // Si el login no fue exitoso, se muestra un mensaje de error
+            if (!loginExitoso) {
+                System.out.println("Nickname incorrecto. Intente nuevamente.");
+            }
+
+        } while (!loginExitoso); // Continuar hasta que el login sea exitoso
+
+        // Verificar si el estado del jugador existe en SQLite
+        PlayerState playerState = daoSQLite.getPlayerState(loggedInPlayer.getPlayerId());
+        if (playerState == null) {
+            // Crear un nuevo estado inicial para el jugador
+            playerState = new PlayerState();
+            playerState.setPlayerId(loggedInPlayer.getPlayerId());
+            playerState.setNickName(loggedInPlayer.getNickname());
+            playerState.setExperience(0);
+            playerState.setLifeLevel(100); // Vida inicial
+            playerState.setCoins(0); // Monedas iniciales
+            playerState.setSessionCount(0);
+            playerState.setLastLogin(LocalDate.now());
+
+            // Guardar el estado inicial en SQLite
+            if (daoSQLite.savePlayerState(playerState)) {
+                System.out.println("Estado inicial del jugador creado en SQLite.");
+            } else {
+                System.out.println("Hubo un error al guardar el estado inicial del jugador en SQLite.");
+            }
+        }
+
+        return loggedInPlayer; // Retornamos el jugador que hizo login
+    }
+
+
     /**
      * Mostrar el menú principal de opciones.
      */
-    private static void mainMenu() {
+    private static void mainMenu() throws SQLException {
         int option;
         do {
             System.out.println("\n---- Menú Principal ----");
@@ -164,10 +233,15 @@ public class PlayerView {
         System.out.println("Última conexión: " + "2024-11-20");
     }
 
+
+
     /**
      * Mostrar lista de juegos y permitir al jugador elegir uno para simular una partida.
      */
-    private static void selectAndPlayGame() {
+    private static void selectAndPlayGame() throws SQLException {
+        // Llamamos a login y obtenemos el jugador
+        Player loggedInPlayer = login();
+
         // Definir las URLs de conexión a ambas bases de datos
         String mysqlUrl = "jdbc:mysql://sql.freedb.tech:3306/freedb_UD2_PE_Conectores";
         String postgresUrl = "jdbc:postgresql://ep-yellow-pine-a2a8zmg3.eu-central-1.aws.neon.tech:5432/UD2_PE_Conectores";
@@ -215,19 +289,49 @@ public class PlayerView {
         }
     }
 
+
     /**
      * Simular una partida cambiando los datos del jugador con Math.random()
      */
-    private static void simulateGame(Game selectedGame) {
+    private static void simulateGame(Game selectedGame) throws SQLException {
         // Obtener el progreso del jugador
         System.out.print("Introduce tu ID de jugador: ");
         int playerId = scanner.nextInt();
 
-        // Simulamos obtener el estado del jugador (esto se debe hacer con el DAO correspondiente)
-        PlayerState playerState = getPlayerState(playerId); // Este método debe existir en el DAO correspondiente
+        // Verificar si el jugador existe en SQLite
+        PlayerState playerState = daoSQLite.getPlayerState(playerId);
+        boolean playerFound = false;
 
-        if (playerState == null) {
-            System.out.println("Jugador no encontrado.");
+        if (playerState != null) {
+            System.out.println("Jugador encontrado en SQLite.");
+            playerFound = true;
+        } else {
+            // Si no está en SQLite, intentar obtenerlo de MySQL
+            playerState = daoMySQL.getPlayerState(playerId);
+            if (playerState != null) {
+                System.out.println("Jugador encontrado en MySQL.");
+                playerFound = true;
+            }
+
+            // Si no se encuentra en MySQL, intentar en PostgreSQL
+            if (!playerFound) {
+                playerState = daoPostgreSQL.getPlayerState(playerId);
+                if (playerState != null) {
+                    System.out.println("Jugador encontrado en PostgreSQL.");
+                    playerFound = true;
+                }
+            }
+
+            // Si se encontró el jugador en MySQL o PostgreSQL, guardar el estado inicial en SQLite
+            if (playerFound) {
+                System.out.println("Guardando el estado inicial del jugador en SQLite...");
+                daoSQLite.savePlayerState(playerState);
+            }
+        }
+
+        // Si el jugador no se encuentra en ninguna base de datos
+        if (!playerFound) {
+            System.out.println("Jugador no encontrado en las bases de datos.");
             return;
         }
 
@@ -235,19 +339,88 @@ public class PlayerView {
         System.out.println("Estado inicial del jugador:");
         System.out.println(playerState);
 
-        // Simular cambios en los datos del jugador usando Math.random()
-        playerState.setExperience(playerState.getExperience() + (int)(Math.random() * 100)); // Random experiencia
-        playerState.setLifeLevel(playerState.getLifeLevel() + (int)(Math.random() * 10) - 5); // Random nivel de vida
-        playerState.setCoins(playerState.getCoins() + (int)(Math.random() * 50)); // Random monedas
+        // Verificar y asignar el nickname si está vacío o nulo
+        if (playerState.getNickName() == null || playerState.getNickName().isEmpty()) {
+            System.out.print("Introduce el nickname del jugador: ");
+            scanner.nextLine(); // Limpiar el buffer del Scanner
+            String nickName = scanner.nextLine();
+            playerState.setNickName(nickName);
+        }
 
-        // Mostrar el nuevo estado del jugador
+        // Guardar valores iniciales para la sesión
+        int initialExperience = playerState.getExperience();
+        int initialLifeLevel = playerState.getLifeLevel();
+        int initialCoins = playerState.getCoins();
+
+        // Actualizar los atributos del jugador
+        playerState.setExperience(playerState.getExperience() + (int) (Math.random() * 100)); // Random experiencia
+        playerState.setLifeLevel(playerState.getLifeLevel() + (int) (Math.random() * 10) - 5); // Random nivel de vida
+        playerState.setCoins(playerState.getCoins() + (int) (Math.random() * 50)); // Random monedas
+        playerState.setLastLogin(LocalDate.now());
+
+        // Asegurarse de que los valores sean válidos (p.ej., nivel de vida no negativo)
+        if (playerState.getLifeLevel() < 0) {
+            playerState.setLifeLevel(0);
+        }
+
+        // Mostrar el nuevo estado del jugador después de la simulación
         System.out.println("Nuevo estado del jugador después de la partida:");
         System.out.println(playerState);
 
-        // Guardar los cambios en la base de datos (esto también debe ser gestionado por el DAO)
-        updatePlayerState(playerState); // Este método debe existir en el DAO correspondiente
-        System.out.println("El progreso ha sido guardado.");
+        // Guardar los cambios en la base de datos SQLite
+        if (daoSQLite.updatePlayerState(playerState)) {
+            System.out.println("El progreso ha sido guardado en SQLite.");
+        } else {
+            System.out.println("Hubo un error al guardar el progreso en SQLite.");
+        }
+
+        // Registrar la sesión en la base de datos correspondiente (MySQL o PostgreSQL)
+        int experienceGained = playerState.getExperience() - initialExperience;
+        int lifeLevelChange = playerState.getLifeLevel() - initialLifeLevel;
+        int coinsGained = playerState.getCoins() - initialCoins;
+
+        if (daoMySQL.isActive()) {
+            // Si MySQL está activo, guardar la sesión en MySQL
+            boolean sessionSaved = daoMySQL.saveGameSession(
+                    selectedGame.getGameId(),
+                    playerId,
+                    experienceGained,
+                    lifeLevelChange,
+                    coinsGained,
+                    LocalDate.now()
+            );
+
+            if (sessionSaved) {
+                System.out.println("La sesión de juego ha sido registrada en MySQL.");
+            } else {
+                System.out.println("Hubo un error al registrar la sesión de juego en MySQL.");
+            }
+        } else if (daoPostgreSQL.isActive()) {
+            // Si PostgreSQL está activo, guardar la sesión en PostgreSQL
+            boolean sessionSaved = daoPostgreSQL.saveGameSession(
+                    selectedGame.getGameId(),
+                    playerId,
+                    experienceGained,
+                    lifeLevelChange,
+                    coinsGained,
+                    LocalDate.now()
+            );
+
+            if (sessionSaved) {
+                System.out.println("La sesión de juego ha sido registrada en PostgreSQL.");
+            } else {
+                System.out.println("Hubo un error al registrar la sesión de juego en PostgreSQL.");
+            }
+        } else {
+            System.out.println("No se ha podido conectar a la base de datos.");
+        }
     }
+
+
+
+
+
+
 
     /**
      * Simulamos obtener el estado del jugador.

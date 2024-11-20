@@ -74,11 +74,28 @@ public class PlayerState {
         this.sessionCount = sessionCount;
     }
 
+    public void aumentarSesiones(){
+        this.sessionCount++;
+    }
+
     public LocalDate getLastLogin() {
         return lastLogin;
     }
 
     public void setLastLogin(LocalDate lastLogin) {
         this.lastLogin = lastLogin;
+    }
+
+    @Override
+    public String toString() {
+        return "PlayerState{" +
+                "playerId=" + playerId +
+                ", nickName='" + nickName + '\'' +
+                ", experience=" + experience +
+                ", lifeLevel=" + lifeLevel +
+                ", coins=" + coins +
+                ", sessionCount=" + sessionCount +
+                ", lastLogin=" + lastLogin +
+                '}';
     }
 }

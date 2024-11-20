@@ -21,7 +21,8 @@ public interface IDAOEmpresa {
     List<Player> getTopExperiencePlayers(int limit);
     List<Player> getTopLevelPlayers(int limit);
 
-    // Gestión de partidas
-    boolean saveGameSession(GameSession session);
+
+    boolean saveGameSession(int gameId, int playerId, int experience, int lifeLevel, int coins, LocalDate sessionDate);
+
     List<GameSession> getPlayerSessions(int playerId);
 }

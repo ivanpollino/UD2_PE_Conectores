@@ -12,6 +12,9 @@ public class Player {
     private LocalDate lastLogin;
 
     // Constructor
+    public Player() {
+
+    }
     public Player(String nickname, int experience, int lifeLevel, int coins, int sessionCount, LocalDate lastLogin) {
         this.nickname = nickname;
         this.experience = experience;

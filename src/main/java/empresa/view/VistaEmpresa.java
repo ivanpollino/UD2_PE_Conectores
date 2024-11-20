@@ -203,10 +203,8 @@ public class VistaEmpresa {
     private static void insertarJugador() {
         System.out.print("Nickname: ");
         String nickname = scanner.nextLine();
-        System.out.print("Experiencia: ");
-        int experience = scanner.nextInt();
 
-        Player player = new Player(nickname, experience, 0, 0, 0, LocalDate.now());
+        Player player = new Player(nickname, 0, 0, 0, 0, LocalDate.now());
         if (dao.savePlayerProgress(player)) {
             System.out.println("Jugador insertado correctamente.");
         } else {

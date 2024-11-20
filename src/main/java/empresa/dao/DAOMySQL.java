@@ -3,6 +3,7 @@ package empresa.dao;
 import empresa.models.Game;
 import empresa.models.Player;
 import empresa.models.GameSession;
+import empresa.models.PlayerState;
 
 import java.sql.*;
 import java.time.LocalDate;
@@ -19,11 +20,16 @@ public class DAOMySQL implements IDAOEmpresa {
         return DriverManager.getConnection(url, user, password);
     }
 
+    public boolean isActive() throws SQLException {
+        return getConnection() != null;
+    }
+
+
 
     // Gestión de Videojuegos
     @Override
     public boolean insertGame(Game game) {
-        String query = "INSERT INTO games (game_id, isbn, title, player_count, total_sessions, last_session) VALUES (?, ?, ?, ?, ?, ?)";
+        String query = "INSERT INTO Games (game_id, isbn, title, player_count, total_sessions, last_session) VALUES (?, ?, ?, ?, ?, ?)";
         try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setInt(1, game.getGameId());
@@ -38,6 +44,22 @@ public class DAOMySQL implements IDAOEmpresa {
         }
         return false;
     }
+    public boolean playerExists(int playerId) {
+        String query = "SELECT COUNT(*) FROM Players WHERE player_id = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setInt(1, playerId);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1) > 0;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+
 
     @Override
     public boolean updateGame(Game game) {
@@ -46,7 +68,7 @@ public class DAOMySQL implements IDAOEmpresa {
 
     @Override
     public Game getGameStats(int gameId) {
-        String query = "SELECT * FROM games WHERE game_id = ?";
+        String query = "SELECT * FROM Games WHERE game_id = ?";
         try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setInt(1, gameId);
@@ -120,21 +142,29 @@ public class DAOMySQL implements IDAOEmpresa {
     // Gestión de Jugadores
     @Override
     public boolean savePlayerProgress(Player player) {
-        String query = "INSERT INTO players (player_id, experience, life_level, coins, session_count, last_login) VALUES (?, ?, ?, ?, ?, ?)";
+        // Asegúrate de incluir el campo 'nickname' en la consulta SQL
+        String query = "INSERT INTO Players (nickname, experience, life_level, coins, session_count, last_login) VALUES (?, ?, ?, ?, ?, ?)";
+
         try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(query)) {
-            stmt.setInt(1, player.getPlayerId());
+
+            // Asigna todos los valores a la sentencia
+            stmt.setString(1, player.getNickname()); // Aquí es donde insertas el nickname
             stmt.setInt(2, player.getExperience());
             stmt.setInt(3, player.getLifeLevel());
             stmt.setInt(4, player.getCoins());
             stmt.setInt(5, player.getSessionCount());
             stmt.setDate(6, Date.valueOf(player.getLastLogin()));
+
+            // Ejecuta la sentencia de inserción
             return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
         }
+
         return false;
     }
+
 
     @Override
     public boolean updatePlayerProgress(Player player) {
@@ -144,7 +174,7 @@ public class DAOMySQL implements IDAOEmpresa {
     @Override
     public List<Player> getTopExperiencePlayers(int limit) {
         List<Player> players = new ArrayList<>();
-        String query = "SELECT * FROM players ORDER BY experience DESC LIMIT ?";
+        String query = "SELECT * FROM Players ORDER BY experience DESC LIMIT ?";
         try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setInt(1, limit);
@@ -166,10 +196,63 @@ public class DAOMySQL implements IDAOEmpresa {
         return players;
     }
 
+    public List<Player> getAllPlayers() {
+        List<Player> players = new ArrayList<>();
+        String query = "SELECT * FROM Players";
+
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query);
+             ResultSet rs = stmt.executeQuery()) {
+
+            while (rs.next()) {
+                players.add(new Player(
+                        rs.getInt("player_id"),
+                        rs.getString("nickname"),
+                        rs.getInt("experience"),
+                        rs.getInt("life_level"),
+                        rs.getInt("coins"),
+                        rs.getInt("session_count"),
+                        rs.getDate("last_login").toLocalDate()
+                ));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return players;
+    }
+
+    public PlayerState getPlayerState(int playerId) {
+        PlayerState playerState = null;
+
+        String query = "SELECT experience, life_level, coins, session_count, last_login FROM Players WHERE player_id = ?";
+
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setInt(1, playerId);
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                // Crear el objeto PlayerState con los datos obtenidos de la base de datos
+                playerState = new PlayerState();
+                playerState.setExperience(rs.getInt("experience"));
+                playerState.setLifeLevel(rs.getInt("life_level"));
+                playerState.setCoins(rs.getInt("coins"));
+                playerState.setSessionCount(rs.getInt("session_count"));
+                playerState.setLastLogin(rs.getDate("last_login").toLocalDate());
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return playerState;  // Retorna el estado del jugador o null si no existe
+    }
+
+
+
     @Override
     public List<Player> getTopLevelPlayers(int limit) {
         List<Player> players = new ArrayList<>();
-        String query = "SELECT * FROM players ORDER BY experience DESC, life_level DESC LIMIT ?";
+        String query = "SELECT * FROM Players ORDER BY experience DESC, life_level DESC LIMIT ?";
         try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setInt(1, limit);
@@ -193,22 +276,28 @@ public class DAOMySQL implements IDAOEmpresa {
 
     // Gestión de Partidas
     @Override
-    public boolean saveGameSession(GameSession session) {
-        String query = "INSERT INTO game_sessions (game_id, player_id, experience, life_level, coins, session_date) VALUES (?, ?, ?, ?, ?, ?)";
-        try (Connection conn = getConnection();
-             PreparedStatement stmt = conn.prepareStatement(query)) {
-            stmt.setInt(1, session.getGameId());
-            stmt.setInt(2, session.getPlayerId());
-            stmt.setInt(3, session.getExperience());
-            stmt.setInt(4, session.getLifeLevel());
-            stmt.setInt(5, session.getCoins());
-            stmt.setDate(6, Date.valueOf(session.getSessionDate()));
-            return stmt.executeUpdate() > 0;
+    public boolean saveGameSession(int gameId, int playerId, int experience, int lifeLevel, int coins, LocalDate sessionDate) {
+        String query = "INSERT INTO game_sessions (game_id, player_id, experience, life_level, coins, session_date) " +
+                "VALUES (?, ?, ?, ?, ?, ?)";
+
+        try (Connection connection = getConnection();
+             PreparedStatement statement = connection.prepareStatement(query)) {
+
+            statement.setInt(1, gameId);
+            statement.setInt(2, playerId);
+            statement.setInt(3, experience);
+            statement.setInt(4, lifeLevel);
+            statement.setInt(5, coins);
+            statement.setDate(6, Date.valueOf(sessionDate));
+
+            return statement.executeUpdate() > 0; // Devuelve true si la inserción fue exitosa
         } catch (SQLException e) {
             e.printStackTrace();
+            return false;
         }
-        return false;
     }
+
+
 
     @Override
     public List<GameSession> getPlayerSessions(int playerId) {

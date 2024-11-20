@@ -24,7 +24,7 @@ public class GameDAO {
     // Obtener todos los juegos disponibles desde la base de datos
     public List<Game> getAllGames() {
         List<Game> games = new ArrayList<>();
-        String query = "SELECT * FROM games"; // Suponiendo que los juegos están en la tabla 'games'
+        String query = "SELECT * FROM Games"; // Suponiendo que los juegos están en la tabla 'games'
 
         try (Connection conn = getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
             ResultSet rs = stmt.executeQuery();
