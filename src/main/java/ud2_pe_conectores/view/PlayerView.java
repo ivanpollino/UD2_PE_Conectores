@@ -85,6 +85,9 @@ public class PlayerView {
         } else {
             System.out.println("El jugador se actualizo en la nube.");
         }
+        System.out.println("===== ESTADO DEL JUGADOR " + loggedInPlayer.getNickname() + " =====");
+        playerState = daoSQLite.getPlayerState(loggedInPlayer.getPlayerId());
+        System.out.println(playerState);
 
         return loggedInPlayer; // Retornamos el jugador que hizo login
     }
